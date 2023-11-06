@@ -21,7 +21,7 @@ macro_rules! MapErr {
         let mapped: Result<_, AppError> = $result.map_err(|err| $err_type(err));
         mapped
     }};
-    (DBError -> $result:expr) => {{
+    (DBErr -> $result:expr) => {{
         $result.map_err(|err| AppError::DatabaseError(err))
     }};
 

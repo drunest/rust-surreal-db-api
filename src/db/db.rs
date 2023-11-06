@@ -1,6 +1,5 @@
 use crate::app_error::AppError;
 use crate::MapErr;
-use log;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
@@ -17,11 +16,11 @@ impl DB {
         endpoint: &'static str,
         options: &ConnectionOptions<'a>,
     ) -> Result<Surreal<Client>, AppError> {
-        let db = MapErr!(DBError -> Surreal::new::<Ws>(endpoint).await)?;
+        let db = MapErr!(DBErr -> Surreal::new::<Ws>(endpoint).await)?;
 
-        MapErr!(DBError -> db.signin(options.credentials).await)?;
+        MapErr!(DBErr -> db.signin(options.credentials).await)?;
 
-        MapErr!(DBError -> db.use_ns(options.namespace).use_db(options.database).await)?;
+        MapErr!(DBErr -> db.use_ns(options.namespace).use_db(options.database).await)?;
 
         Ok(db)
     }

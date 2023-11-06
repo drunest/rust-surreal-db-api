@@ -1,16 +1,15 @@
-use actix_web::{middleware::Logger, App, HttpServer};
+use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use log;
-
 mod api;
+mod app_config;
 mod app_error;
 mod db;
-
 #[macro_use]
 mod macros;
 
 use db::db::{ConnectionOptions, DB};
-use surrealdb::opt::auth::Root;
 
+use surrealdb::opt::auth::Root;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "info");
@@ -33,12 +32,15 @@ async fn main() -> std::io::Result<()> {
             log::error!("{}", err);
             std::process::exit(1);
         });
-
     log::info!("Connected to SurrealDB...");
+    let db_ctx = Data::new(db);
 
-    HttpServer::new(|| {
+    HttpServer::new(move || {
         let logger = Logger::default();
-        App::new().wrap(logger)
+        App::new()
+            .app_data(db_ctx.clone())
+            .configure(app_config::configure)
+            .wrap(logger)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
