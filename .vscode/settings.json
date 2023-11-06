@@ -1,0 +1,6 @@
+{
+  "search.exclude": {
+    "**/target": true,
+    "**/.db": true,
+  }
+}
