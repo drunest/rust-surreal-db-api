@@ -14,6 +14,15 @@
 /// let data: Result<Data, AppError> = MapErr!(getDataFromDB(), AppError::DatabaseError)
 /// ```
 ///
+/// ## Available Default Conversions with `->` syntax
+/// ```
+/// DBErr -> AppError::DatabaseError
+///
+/// ServerErr -> AppError:InternalError
+///
+/// IoErr -> AppError::IoError
+/// ````
+///
 ///
 #[macro_export]
 macro_rules! MapErr {
