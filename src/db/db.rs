@@ -1,9 +1,10 @@
-use log::{error, info};
+use crate::app_error::AppError;
+use crate::MapErr;
+use log;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
 
-use crate::app_error::AppError;
 pub struct DB;
 pub struct ConnectionOptions<'a> {
     pub namespace: &'a str,
@@ -16,28 +17,11 @@ impl DB {
         endpoint: &'static str,
         options: &ConnectionOptions<'a>,
     ) -> Result<Surreal<Client>, AppError> {
-        let db = Surreal::new::<Ws>(endpoint).await.map_err(|err| {
-            error!(
-                "Something went wrong while connecting to SurrealDB: {}",
-                &err
-            );
-            AppError::DatabaseError(err)
-        })?;
+        let db = MapErr!(DBError -> Surreal::new::<Ws>(endpoint).await)?;
 
-        db.signin(options.credentials).await.map_err(|err| {
-            error!("Error Authenticating To SurrealDB: {}", &err);
-            AppError::DatabaseError(err)
-        })?;
+        MapErr!(DBError -> db.signin(options.credentials).await)?;
 
-        db.use_ns(options.namespace)
-            .use_db(options.database)
-            .await
-            .map_err(|err| {
-                error!("Something went wrong connecting to SurrealDB: {}", &err);
-                AppError::DatabaseError(err)
-            })?;
-
-        info!("Connected to Surreal DB...");
+        MapErr!(DBError -> db.use_ns(options.namespace).use_db(options.database).await)?;
 
         Ok(db)
     }

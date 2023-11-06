@@ -27,11 +27,15 @@ pub enum AppError {
     DatabaseError(surrealdb::Error),
 
     #[allow(dead_code)]
-    #[error("Provided Bad Request Data: Error => {0}")]
+    #[error("Bad Request: Error => {0}")]
     BadRequest(&'static str),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
+
+    #[allow(dead_code)]
+    #[error("InternalServerError: Error => {0}")]
+    InternalError(&'static str),
 }
 
 impl ResponseError for AppError {
@@ -49,6 +53,7 @@ impl ResponseError for AppError {
         match self {
             AppError::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::IOError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
         }
     }

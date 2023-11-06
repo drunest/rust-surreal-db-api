@@ -4,6 +4,8 @@ use log;
 mod api;
 mod app_error;
 mod db;
+
+#[macro_use]
 mod macros;
 
 use db::db::{ConnectionOptions, DB};
@@ -24,7 +26,15 @@ async fn main() -> std::io::Result<()> {
             password: "krsna",
         },
     };
-    let _db = DB::connect("127.0.0.1:8000", &conn_opts).await.unwrap();
+    let db = DB::connect("127.0.0.1:8000", &conn_opts)
+        .await
+        .unwrap_or_else(|err| {
+            log::error!("Error Connecting To SurrealDB");
+            log::error!("{}", err);
+            std::process::exit(1);
+        });
+
+    log::info!("Connected to SurrealDB...");
 
     HttpServer::new(|| {
         let logger = Logger::default();
