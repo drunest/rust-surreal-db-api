@@ -48,7 +48,6 @@ impl ResponseError for AppError {
             .insert_header(ContentType::json())
             .json(error_response)
     }
-
     fn status_code(&self) -> StatusCode {
         match self {
             AppError::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,

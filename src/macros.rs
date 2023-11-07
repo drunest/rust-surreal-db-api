@@ -26,7 +26,7 @@
 ///
 
 #[macro_export]
-macro_rules! MapErr {
+macro_rules! map_err {
     ($result:expr, $err_type:expr) => {{
         let mapped: Result<_, crate::app_error::AppError;> = $result.map_err(|err| $err_type(err));
         mapped
