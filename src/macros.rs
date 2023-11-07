@@ -24,21 +24,32 @@
 /// ````
 ///
 ///
+
 #[macro_export]
 macro_rules! MapErr {
     ($result:expr, $err_type:expr) => {{
-        let mapped: Result<_, AppError> = $result.map_err(|err| $err_type(err));
+        let mapped: Result<_, crate::app_error::AppError;> = $result.map_err(|err| $err_type(err));
         mapped
     }};
     (DBErr -> $result:expr) => {{
-        $result.map_err(|err| AppError::DatabaseError(err))
+        $result.map_err(|err| crate::app_error::AppError::DatabaseError(err))
     }};
 
     (ServerErr -> $result:expr) => {{
-        $result.map_err(|err| AppError::InternalError(err))
+        $result.map_err(|err| crate::app_error::AppError;::InternalError(err))
     }};
 
     (IoErr -> $result:expr) => {{
-        $result.map_err(|err| AppError::IOError(err))
+        $result.map_err(|err| crate::app_error::AppError;::IOError(err))
+    }};
+}
+
+#[macro_export]
+macro_rules! data_map {
+    ($($key:expr => $value:expr),* $(,)?) => {{
+        let mut map: ::std::collections::BTreeMap<String, surrealdb::sql::Value>  = ::std::collections::BTreeMap::new();
+
+        $(map.insert($key, $value);)+
+        map
     }};
 }

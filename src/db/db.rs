@@ -2,8 +2,8 @@ use crate::app_error::AppError;
 use crate::MapErr;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
+use surrealdb::sql::Value;
 use surrealdb::Surreal;
-
 pub struct DB;
 pub struct ConnectionOptions<'a> {
     pub namespace: &'a str,
@@ -25,3 +25,6 @@ impl DB {
         Ok(db)
     }
 }
+
+pub trait Creatable: Into<Value> {}
+pub trait Updatable: Into<Value> {}

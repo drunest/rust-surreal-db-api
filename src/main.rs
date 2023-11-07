@@ -7,6 +7,7 @@ mod db;
 #[macro_use]
 mod macros;
 
+
 use db::db::{ConnectionOptions, DB};
 
 use surrealdb::opt::auth::Root;
