@@ -9,14 +9,14 @@ use serde::Serialize;
 #[derive(Serialize, Debug)]
 struct ErrorResponse {
     status_code: u16,
-    message: String,
+    error: String,
 }
 
 impl ErrorResponse {
     pub fn new(status_code: u16, message: String) -> Self {
         Self {
             status_code,
-            message,
+            error: message,
         }
     }
 }
@@ -27,8 +27,8 @@ pub enum AppError {
     DatabaseError(surrealdb::Error),
 
     #[allow(dead_code)]
-    #[error("Bad Request: Error => {0}")]
-    BadRequest(&'static str),
+    #[error("{0}")]
+    BadRequest(String),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),

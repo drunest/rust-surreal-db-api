@@ -49,7 +49,7 @@ macro_rules! data_map {
     ($($key:expr => $value:expr),* $(,)?) => {{
         let mut map: ::std::collections::BTreeMap<String, surrealdb::sql::Value>  = ::std::collections::BTreeMap::new();
 
-        $(map.insert($key, $value);)+
+        $(map.insert($key.into(), $value);)+
         map
     }};
 }
