@@ -1,5 +1,5 @@
 use actix_web::web::Data;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use surrealdb::{
     engine::remote::ws::Client,
     sql::{Thing, Value},

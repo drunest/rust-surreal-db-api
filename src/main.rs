@@ -4,6 +4,7 @@ mod api;
 mod app_config;
 mod app_error;
 mod db;
+mod utils;
 #[macro_use]
 mod macros;
 

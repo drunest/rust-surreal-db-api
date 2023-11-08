@@ -34,8 +34,8 @@ pub enum AppError {
     IOError(#[from] std::io::Error),
 
     #[allow(dead_code)]
-    #[error("InternalServerError: Error => {0}")]
-    InternalError(&'static str),
+    #[error("InternalServerError: {0}")]
+    InternalError(String),
 }
 
 impl ResponseError for AppError {

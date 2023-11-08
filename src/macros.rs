@@ -36,11 +36,11 @@ macro_rules! map_err {
     }};
 
     (ServerErr -> $result:expr) => {{
-        $result.map_err(|err| crate::app_error::AppError;::InternalError(err))
+        $result.map_err(|err| crate::app_error::AppError::InternalError(err))
     }};
 
     (IoErr -> $result:expr) => {{
-        $result.map_err(|err| crate::app_error::AppError;::IOError(err))
+        $result.map_err(|err| crate::app_error::AppError::IOError(err))
     }};
 }
 
