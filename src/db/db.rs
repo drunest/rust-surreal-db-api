@@ -18,9 +18,11 @@ impl DB {
     ) -> Result<Surreal<Client>, AppError> {
         let db = map_err!(DBErr -> Surreal::new::<Ws>(endpoint).await)?;
 
-        map_err!(DBErr -> db.signin(options.credentials).await)?;
+        db.signin(options.credentials).await?;
 
-        map_err!(DBErr -> db.use_ns(options.namespace).use_db(options.database).await)?;
+        db.use_ns(options.namespace)
+            .use_db(options.database)
+            .await?;
 
         Ok(db)
     }

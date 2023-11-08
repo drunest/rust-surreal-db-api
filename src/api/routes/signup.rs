@@ -23,10 +23,11 @@ pub async fn post(
     let first_name = body.first_name.clone();
     let last_name = body.last_name.clone();
     let password = body.password.clone();
+
     let email_id = body.email_id.clone();
     let age = body.age;
 
-    let new_user: User = User {
+    let mut new_user: User = User {
         id: None,
         username,
         first_name,
@@ -37,6 +38,7 @@ pub async fn post(
         avatar: None,
     };
 
+    // Hashing of password id done internally in the create function after user existing check
     let new_user = new_user.create(&db).await?;
 
     match new_user {

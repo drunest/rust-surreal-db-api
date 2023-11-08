@@ -30,8 +30,8 @@ pub enum AppError {
     #[error("{0}")]
     BadRequest(String),
 
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
+    #[error("IOError: {0}")]
+    IOError(std::io::Error),
 
     #[allow(dead_code)]
     #[error("InternalServerError: {0}")]
@@ -55,5 +55,17 @@ impl ResponseError for AppError {
             AppError::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
         }
+    }
+}
+
+impl From<surrealdb::Error> for AppError {
+    fn from(value: surrealdb::Error) -> Self {
+        AppError::DatabaseError(value)
+    }
+}
+
+impl From<std::io::Error> for AppError {
+    fn from(value: std::io::Error) -> Self {
+        AppError::IOError(value)
     }
 }

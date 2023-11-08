@@ -1,12 +1,12 @@
 use actix_web::web::Data;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use surrealdb::{
     engine::remote::ws::Client,
     sql::{Thing, Value},
     Surreal,
 };
 
-use crate::{app_error::AppError, data_map, map_err};
+use crate::{app_error::AppError, data_map, utils::password};
 
 const TABLE_NAME: &str = "user";
 
@@ -25,6 +25,31 @@ pub struct User {
     pub password: String,
     pub age: u8,
     pub avatar: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub enum UserFindableCol {
+    #[allow(dead_code)]
+    Username,
+
+    #[allow(dead_code)]
+    EmailId,
+
+    #[allow(dead_code)]
+    FirstName,
+
+    #[allow(dead_code)]
+    LastName,
+}
+impl Into<String> for UserFindableCol {
+    fn into(self) -> String {
+        match self {
+            Self::Username => "username".into(),
+            Self::EmailId => "email_id".into(),
+            Self::FirstName => "first_name".into(),
+            Self::LastName => "last_name".into(),
+        }
+    }
 }
 
 impl From<User> for Value {
@@ -51,14 +76,15 @@ impl User {
     pub async fn get_all(db: &Data<Surreal<Client>>) -> Result<Vec<User>, AppError> {
         let q = "SELECT * from type::table($tb);";
 
-        let mut response = map_err!(DBErr -> db.query(q).bind(("tb", TABLE_NAME)).await)?;
+        let mut response = db.query(q).bind(("tb", TABLE_NAME)).await?;
 
-        let users = map_err!(DBErr -> response.take::<Vec<User>>(0))?;
+        let users = response.take::<Vec<User>>(0)?;
 
         Ok(users)
     }
     /// Creates a new user only if the email and username does not exist in the database
-    pub async fn create(&self, db: &Data<Surreal<Client>>) -> Result<Option<User>, AppError> {
+    /// Hashing of the password is done in this function
+    pub async fn create(&mut self, db: &Data<Surreal<Client>>) -> Result<Option<User>, AppError> {
         let existing = self.exists(&db).await?;
 
         if let Some(existing) = existing {
@@ -78,19 +104,52 @@ impl User {
             }
         }
 
+        self.password = password::hash_password(&self.password)?;
         let q = "CREATE type::table($table) CONTENT $data RETURN *";
 
         let vars = data_map!["table" => TABLE_NAME.into(), "data" => self.clone().into()];
 
-        let mut db_response = map_err!(DBErr -> db.query(q).bind(vars).await)?;
+        let mut db_response = db.query(q).bind(vars).await?;
 
-        let user: Option<User> = map_err!(DBErr -> db_response.take(0))?;
+        let user: Option<User> = db_response.take(0)?;
 
         Ok(user)
     }
 
+    pub async fn verify_password(&self, password: &str) -> Result<bool, AppError> {
+        password::verify(password, &self.password)
+    }
+
+    pub async fn find_one(
+        db: &Data<Surreal<Client>>,
+        search_term: UserFindableCol,
+        value: impl Into<Value>,
+    ) -> Result<Option<User>, AppError> {
+        let search_term: String = search_term.into();
+        let find_q = format!(
+            "SELECT * FROM type::table($table) where {} = $value;",
+            search_term
+        );
+
+        let vars = data_map![
+            "table" => TABLE_NAME.into(),
+            "value" => value.into()
+        ];
+
+        let mut db_res = db.query(find_q).bind(vars).await?;
+
+        let db_res: Vec<User> = db_res.take(0)?;
+
+        if db_res.len() == 0 {
+            return Ok(None);
+        }
+        let user = db_res[0].clone();
+
+        Ok(Some(user))
+    }
+
     pub async fn exists(&self, db: &Data<Surreal<Client>>) -> Result<Option<UserExists>, AppError> {
-        let find_q = "SELECT username, email_id from type::table($table) where username = $username or email_id = $email";
+        let find_q = "SELECT username, email_id FROM type::table($table) where username = $username or email_id = $email";
 
         let vars = data_map![
             "table" => TABLE_NAME.into(),
@@ -98,9 +157,9 @@ impl User {
             "email" => self.email_id.clone().into(),
         ];
 
-        let mut db_res = map_err!(DBErr -> db.query(find_q).bind(vars).await)?;
-        let existing_username: Option<String> = map_err!(DBErr -> db_res.take("username"))?;
-        let existing_email: Option<String> = map_err!(DBErr -> db_res.take("email_id"))?;
+        let mut db_res = db.query(find_q).bind(vars).await?;
+        let existing_username: Option<String> = db_res.take("username")?;
+        let existing_email: Option<String> = db_res.take("email_id")?;
 
         if let Some(username) = existing_username {
             if username == self.username {
