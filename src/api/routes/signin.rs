@@ -2,6 +2,7 @@ use crate::{
     app_error::AppError,
     db::models::user::{User, UserFindableCol},
 };
+use actix_session::Session;
 use actix_web::{web, HttpResponse};
 use serde::Deserialize;
 use serde_json::json;
@@ -17,6 +18,7 @@ pub struct SignInBody {
 pub async fn post(
     db: web::Data<Surreal<Client>>,
     body: web::Json<SignInBody>,
+    session: Session,
 ) -> Result<HttpResponse, AppError> {
     let username = body.username.to_owned();
     let email_id = body.email_id.to_owned();
@@ -42,7 +44,10 @@ pub async fn post(
 
             match check_password {
                 true => {
-                    dbg!(user);
+                    let th = user.id.unwrap().to_string();
+                    session
+                        .insert("user", th)
+                        .map_err(|_| AppError::InternalError("Session Error".into()))?;
                     Ok(HttpResponse::Ok().json(json!({"status": "success", "msg": "logging_in" })))
                 }
                 false => {

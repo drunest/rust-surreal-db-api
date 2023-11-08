@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-identity = "0.6.0"
+actix-session = { version = "0.8.0", features = ["cookie-session"] }
 actix-web = "4.4.0"
 surrealdb = "1.0.0"
 serde = "1.0.190"
@@ -15,3 +17,5 @@ log = "0.4.20"
 thiserror = "1.0.50"
 async-trait = "0.1.74"
 argon2 = "0.5.2"
+chrono = "0.4.31"
+dotenvy = "0.15.7"
