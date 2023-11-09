@@ -2,7 +2,7 @@ use actix_web::web::Data;
 use serde::{Deserialize, Serialize};
 use surrealdb::{
     engine::remote::ws::Client,
-    sql::{Thing, Value},
+    sql::{self, Thing, Value},
     Surreal,
 };
 
@@ -25,6 +25,8 @@ pub struct User {
     pub password: String,
     pub age: u8,
     pub avatar: Option<String>,
+    pub is_admin: bool,
+    pub created_at: sql::Datetime,
 }
 
 #[derive(Debug, Clone)]
@@ -62,6 +64,8 @@ impl From<User> for Value {
             "password" => user.password.into(),
             "age" => user.age.into(),
             "avatar" => user.avatar.into(),
+            "is_admin" => user.is_admin.into(),
+            "created_at" => user.created_at.into(),
         ];
 
         // Checks if this is a new user or not
@@ -183,6 +187,7 @@ pub struct SlimUser {
     pub username: String,
     pub full_name: String,
     pub email_id: String,
+    pub is_admin: bool,
     pub avatar: Option<String>,
 }
 
@@ -198,6 +203,28 @@ impl From<&User> for SlimUser {
             full_name: format!("{} {}", value.first_name, value.last_name),
             email_id: value.email_id.clone(),
             avatar: value.avatar.clone(),
+            is_admin: value.is_admin,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AuthenticatedUser {
+    pub id: String,
+    pub username: String,
+    pub is_admin: bool,
+}
+
+impl From<&User> for AuthenticatedUser {
+    fn from(value: &User) -> Self {
+        let id = match value.id.clone() {
+            Some(id) => id.to_string(),
+            None => String::from(""),
+        };
+        Self {
+            id,
+            username: value.username.clone(),
+            is_admin: value.is_admin,
         }
     }
 }

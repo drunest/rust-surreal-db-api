@@ -1,4 +1,5 @@
 use actix_identity::error::GetIdentityError;
+use actix_session::SessionInsertError;
 use actix_web::{
     error::ResponseError,
     http::{header::ContentType, StatusCode},
@@ -49,6 +50,10 @@ pub enum AppError {
     #[allow(dead_code)]
     #[error("UNAUTHORIZED: {0}")]
     IdentityError(GetIdentityError),
+
+    #[allow(dead_code)]
+    #[error("Error Creating Session: {0}")]
+    SessionInsertError(SessionInsertError),
 }
 
 impl ResponseError for AppError {
@@ -70,6 +75,7 @@ impl ResponseError for AppError {
             AppError::UnAuthorized => StatusCode::UNAUTHORIZED,
             AppError::IdentityError(_) => StatusCode::UNAUTHORIZED,
             AppError::Forbidden(_) => StatusCode::FORBIDDEN,
+            AppError::SessionInsertError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
@@ -89,5 +95,11 @@ impl From<std::io::Error> for AppError {
 impl From<GetIdentityError> for AppError {
     fn from(value: GetIdentityError) -> Self {
         AppError::IdentityError(value)
+    }
+}
+
+impl From<SessionInsertError> for AppError {
+    fn from(value: SessionInsertError) -> Self {
+        AppError::SessionInsertError(value)
     }
 }

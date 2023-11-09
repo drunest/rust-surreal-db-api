@@ -21,7 +21,7 @@ fetchUsers.addEventListener("click", async () => {
 	console.log("Getting users");
 	usersContainer.innerHTML = "";
 	try {
-		let res = await fetch("http://localhost:8080/api/users", {
+		let res = await fetch("http://localhost:8080/api/admin/users", {
 			method: "GET",
 			credentials: "include",
 		});

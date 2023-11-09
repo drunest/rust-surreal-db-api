@@ -32,15 +32,35 @@ fn custom_json_error_handler(err: JsonPayloadError, req: &HttpRequest) -> actix_
         _ => AppError::BadRequest(format!("{}", err)).into(),
     }
 }
-
+// ! Routing
+//? - /
+//?- /api
+//?     - /auth
+//?         - /login
+//?         - /register
+//?
+//?     - /v1
+//?         - /users
+/// Configures the app routing and errors
 pub fn configure(config: &mut web::ServiceConfig) {
+    // Set up custom JSON payload error handler
     let custom_json_payload_error =
         web::JsonConfig::default().error_handler(custom_json_error_handler);
 
-    let api_scope = web::scope("/api")
-        .service(web::resource("/auth/signin").route(web::post().to(signin::login)))
-        .service(web::resource("/auth/signup").route(web::post().to(signup::post)))
+    // Routes for Authentication
+    let auth = web::scope("/auth")
+        .service(web::resource("/login").route(web::post().to(signin::login)))
+        .service(web::resource("/register").route(web::post().to(signup::register)));
+
+    // Define v1 version routes
+    let v1 = web::scope("/v1");
+
+    // Define admin only routes
+    let admin = web::scope("/admin")
         .service(web::resource("/users").route(web::get().to(routes::users::get_all_users)));
+
+    // Create API scope containing authentication and version 1 routes
+    let api_scope = web::scope("/api").service(auth).service(v1).service(admin);
 
     config
         .app_data(custom_json_payload_error)
@@ -58,9 +78,10 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
+    /// Initializes dotenv and returns a `AppConfig` containing all the required variables
     pub fn init() -> Self {
         dotenv().expect("Error Loading Environment Variables");
-        let session_secret = get_env("SECRET");
+        let session_secret = get_env("SESSION_SECRET");
         let database_namespace = get_env("SURREAL_NAMESPACE");
         let database_name = get_env("SURREAL_DATABASE");
         let database_username = get_env("SURREAL_USERNAME");
@@ -76,6 +97,7 @@ impl AppConfig {
     }
 }
 
+/// Gets a env variable from the environment panics if not loaded
 fn get_env(key: &str) -> String {
     std::env::var(key).expect(&format!("ENVIRONMENT ERROR: {} not set!", key))
 }

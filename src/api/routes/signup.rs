@@ -15,7 +15,7 @@ pub struct UserCreationBody {
     pub age: u8,
 }
 
-pub async fn post(
+pub async fn register(
     body: web::Json<UserCreationBody>,
     db: web::Data<Surreal<Client>>,
 ) -> Result<HttpResponse, AppError> {
@@ -36,6 +36,8 @@ pub async fn post(
         password,
         age,
         avatar: None,
+        is_admin: false,
+        created_at: chrono::Utc::now().into(),
     };
 
     // Hashing of password id done internally in the create function after user existing check

@@ -1,8 +1,9 @@
 use crate::{
     app_error::AppError,
-    db::models::user::{SlimUser, User, UserFindableCol},
+    db::models::user::{AuthenticatedUser, SlimUser, User, UserFindableCol},
 };
 use actix_identity::Identity;
+use actix_session::Session;
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse};
 use serde::Deserialize;
 use serde_json::json;
@@ -53,6 +54,7 @@ fn match_user_exists(
 pub async fn login(
     db: web::Data<Surreal<Client>>,
     body: web::Json<SignInBody>,
+    session: Session,
     req: HttpRequest,
 ) -> Result<HttpResponse, AppError> {
     let username = body.username.to_owned();
@@ -73,10 +75,12 @@ pub async fn login(
     match check_password {
         true => {
             let slim_user = SlimUser::from(&user);
+            let user_store = AuthenticatedUser::from(&user);
             Identity::login(&req.extensions(), slim_user.id.clone()).map_err(|err| {
                 dbg!(err);
                 AppError::InternalError("Something Went Wrong".into())
             })?;
+            session.insert("auth_user", user_store)?;
 
             Ok(HttpResponse::Ok().json(json!(
             {"status": "success",
