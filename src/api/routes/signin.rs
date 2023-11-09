@@ -46,7 +46,7 @@ pub async fn post(
                 true => {
                     let th = user.id.unwrap().to_string();
                     session
-                        .insert("user", th)
+                        .insert("uid", th)
                         .map_err(|_| AppError::InternalError("Session Error".into()))?;
                     Ok(HttpResponse::Ok().json(json!({"status": "success", "msg": "logging_in" })))
                 }

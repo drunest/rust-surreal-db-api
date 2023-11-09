@@ -1,14 +1,14 @@
+use crate::{
+    api::routes::{self, signin, signup},
+    app_error::AppError,
+};
 use actix_web::{
     error::JsonPayloadError,
     get,
     web::{self},
     HttpRequest, HttpResponse,
 };
-
-use crate::{
-    api::routes::{self, signin, signup},
-    app_error::AppError,
-};
+use dotenvy::dotenv;
 
 #[get("/")]
 async fn hello() -> HttpResponse {
@@ -46,4 +46,18 @@ pub fn configure(config: &mut web::ServiceConfig) {
         .app_data(custom_json_payload_error)
         .service(hello)
         .service(api_scope);
+}
+
+#[derive(Debug, Clone)]
+pub struct AppConfig {
+    pub session_secret: String,
+}
+
+impl AppConfig {
+    pub fn init() -> Self {
+        dotenv().expect("Error Loading Environment Variables");
+        let session_secret = std::env::var("SECRET").unwrap();
+
+        AppConfig { session_secret }
+    }
 }

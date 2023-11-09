@@ -36,6 +36,10 @@ pub enum AppError {
     #[allow(dead_code)]
     #[error("InternalServerError: {0}")]
     InternalError(String),
+
+    #[allow(dead_code)]
+    #[error("UNAUTHORIZED please login first..")]
+    UnAuthorized,
 }
 
 impl ResponseError for AppError {
@@ -54,6 +58,7 @@ impl ResponseError for AppError {
             AppError::IOError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
+            AppError::UnAuthorized => StatusCode::UNAUTHORIZED,
         }
     }
 }

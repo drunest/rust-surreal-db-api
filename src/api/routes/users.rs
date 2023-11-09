@@ -8,13 +8,17 @@ pub async fn get_all_users(
     db: Data<Surreal<Client>>,
     session: Session,
 ) -> Result<HttpResponse, AppError> {
-    let curr_user = session.get::<String>("user").map_err(|err| {
+    let curr_user = session.get::<String>("uid").map_err(|err| {
         dbg!(err);
         AppError::InternalError("Session Error".into())
     })?;
-    dbg!(curr_user);
+    match curr_user {
+        Some(user) => {
+            dbg!(user);
 
-    let users = User::get_all(&db).await?;
-
-    Ok(HttpResponse::Ok().json(users))
+            let users = User::get_all(&db).await?;
+            Ok(HttpResponse::Ok().json(users))
+        }
+        None => Err(AppError::UnAuthorized),
+    }
 }
