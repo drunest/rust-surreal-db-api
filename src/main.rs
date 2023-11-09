@@ -25,13 +25,15 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
 
     log::info!("Radhey Shyam");
+    let namespace = &application_config.database_namespace;
+    let database = &application_config.database_name;
+    let username = &application_config.database_username;
+    let password = &application_config.database_password;
+
     let conn_opts = ConnectionOptions {
-        namespace: "development",
-        database: "test",
-        credentials: Root {
-            username: "radha",
-            password: "krsna",
-        },
+        namespace,
+        database,
+        credentials: Root { username, password },
     };
     let db = DB::connect("127.0.0.1:8000", &conn_opts)
         .await

@@ -51,13 +51,31 @@ pub fn configure(config: &mut web::ServiceConfig) {
 #[derive(Debug, Clone)]
 pub struct AppConfig {
     pub session_secret: String,
+    pub database_name: String,
+    pub database_namespace: String,
+    pub database_username: String,
+    pub database_password: String,
 }
 
 impl AppConfig {
     pub fn init() -> Self {
         dotenv().expect("Error Loading Environment Variables");
-        let session_secret = std::env::var("SECRET").unwrap();
+        let session_secret = get_env("SECRET");
+        let database_namespace = get_env("SURREAL_NAMESPACE");
+        let database_name = get_env("SURREAL_DATABASE");
+        let database_username = get_env("SURREAL_USERNAME");
+        let database_password = get_env("SURREAL_PASSWORD");
 
-        AppConfig { session_secret }
+        AppConfig {
+            session_secret,
+            database_name,
+            database_namespace,
+            database_password,
+            database_username,
+        }
     }
+}
+
+fn get_env(key: &str) -> String {
+    std::env::var(key).expect(&format!("ENVIRONMENT ERROR: {} not set!", key))
 }
