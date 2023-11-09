@@ -1,23 +1,19 @@
-use actix_session::Session;
-use actix_web::{web::Data, HttpResponse};
-use surrealdb::{engine::remote::ws::Client, Surreal};
-
 use crate::{app_error::AppError, db::models::user::User};
+use actix_identity::Identity;
+use actix_web::{web::Data, HttpResponse};
+use serde_json::json;
+use surrealdb::{engine::remote::ws::Client, Surreal};
 
 pub async fn get_all_users(
     db: Data<Surreal<Client>>,
-    session: Session,
+    uid: Option<Identity>,
 ) -> Result<HttpResponse, AppError> {
-    let curr_user = session.get::<String>("uid").map_err(|err| {
-        dbg!(err);
-        AppError::InternalError("Session Error".into())
-    })?;
-    match curr_user {
+    match uid {
         Some(user) => {
-            dbg!(user);
+            let user_id = user.id()?;
 
             let users = User::get_all(&db).await?;
-            Ok(HttpResponse::Ok().json(users))
+            Ok(HttpResponse::Ok().json(json!({"you": user_id, "users": users})))
         }
         None => Err(AppError::UnAuthorized),
     }

@@ -176,3 +176,28 @@ impl User {
         Ok(None)
     }
 }
+
+#[derive(Serialize, Debug, Clone)]
+pub struct SlimUser {
+    pub id: String,
+    pub username: String,
+    pub full_name: String,
+    pub email_id: String,
+    pub avatar: Option<String>,
+}
+
+impl From<&User> for SlimUser {
+    fn from(value: &User) -> Self {
+        let id = match value.id.clone() {
+            Some(id) => id.to_string(),
+            None => String::from(""),
+        };
+        Self {
+            id,
+            username: value.username.clone(),
+            full_name: format!("{} {}", value.first_name, value.last_name),
+            email_id: value.email_id.clone(),
+            avatar: value.avatar.clone(),
+        }
+    }
+}

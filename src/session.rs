@@ -10,7 +10,7 @@ pub fn make_session(app_config: &app_config::AppConfig) -> SessionMiddleware<Coo
     )
     .session_lifecycle(PersistentSession::default().session_ttl(CookieDuration::days(15)))
     .cookie_name("auth".to_owned())
-    .cookie_domain(String::from("localhost").into())
+    .cookie_domain(None)
     .cookie_secure(true)
     .cookie_http_only(true)
     .cookie_path("/".to_owned())

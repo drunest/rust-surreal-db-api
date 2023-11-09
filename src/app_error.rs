@@ -1,3 +1,4 @@
+use actix_identity::error::GetIdentityError;
 use actix_web::{
     error::ResponseError,
     http::{header::ContentType, StatusCode},
@@ -38,8 +39,16 @@ pub enum AppError {
     InternalError(String),
 
     #[allow(dead_code)]
-    #[error("UNAUTHORIZED please login first..")]
+    #[error("Unauthorized")]
     UnAuthorized,
+
+    #[allow(dead_code)]
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
+
+    #[allow(dead_code)]
+    #[error("UNAUTHORIZED: {0}")]
+    IdentityError(GetIdentityError),
 }
 
 impl ResponseError for AppError {
@@ -59,6 +68,8 @@ impl ResponseError for AppError {
             AppError::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
             AppError::UnAuthorized => StatusCode::UNAUTHORIZED,
+            AppError::IdentityError(_) => StatusCode::UNAUTHORIZED,
+            AppError::Forbidden(_) => StatusCode::FORBIDDEN,
         }
     }
 }
@@ -72,5 +83,11 @@ impl From<surrealdb::Error> for AppError {
 impl From<std::io::Error> for AppError {
     fn from(value: std::io::Error) -> Self {
         AppError::IOError(value)
+    }
+}
+
+impl From<GetIdentityError> for AppError {
+    fn from(value: GetIdentityError) -> Self {
+        AppError::IdentityError(value)
     }
 }

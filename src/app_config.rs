@@ -38,7 +38,7 @@ pub fn configure(config: &mut web::ServiceConfig) {
         web::JsonConfig::default().error_handler(custom_json_error_handler);
 
     let api_scope = web::scope("/api")
-        .service(web::resource("/auth/signin").route(web::post().to(signin::post)))
+        .service(web::resource("/auth/signin").route(web::post().to(signin::login)))
         .service(web::resource("/auth/signup").route(web::post().to(signup::post)))
         .service(web::resource("/users").route(web::get().to(routes::users::get_all_users)));
 

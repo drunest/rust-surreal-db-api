@@ -2,9 +2,24 @@
  * @type {HTMLFormElement}
  */
 const signInForm = document.getElementById("signin-form");
+function createWelcomeText(username = undefined) {
+	username = username ?? JSON.parse(localStorage.getItem("user")).username;
+	let found = document.getElementById("welcome-text");
+	if (found) found.remove();
+
+	let h2 = document.createElement("h2");
+	h2.id = "welcome-text";
+	h2.innerText = "Welcome @" + username;
+	userHeader.appendChild(h2);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+	createWelcomeText();
+});
 
 fetchUsers.addEventListener("click", async () => {
 	console.log("Getting users");
+	usersContainer.innerHTML = "";
 	try {
 		let res = await fetch("http://localhost:8080/api/users", {
 			method: "GET",
@@ -12,7 +27,7 @@ fetchUsers.addEventListener("click", async () => {
 		});
 		let data = await res.json();
 		if (res.ok) {
-			let users = data;
+			let users = data.users;
 			console.table(users);
 			users.forEach((user) => {
 				const userItem = document.createElement("li");
@@ -20,6 +35,11 @@ fetchUsers.addEventListener("click", async () => {
 				usersContainer.appendChild(userItem);
 			});
 		} else {
+			if (res.status === 401) {
+				localStorage.removeItem("user");
+				let found = document.getElementById("welcome-text");
+				if (found) found.innerText = data.error;
+			}
 			alert(`Error Fetching Users from API: ${data.error}`);
 		}
 	} catch (error) {
@@ -28,6 +48,7 @@ fetchUsers.addEventListener("click", async () => {
 });
 
 signInForm.addEventListener("submit", async (ev) => {
+	localStorage.removeItem("user");
 	ev.preventDefault();
 	const username = ev.target.username.value;
 	const password = ev.target.password.value;
@@ -46,6 +67,9 @@ signInForm.addEventListener("submit", async (ev) => {
 		console.log(data);
 
 		if (res.ok) {
+			localStorage.setItem("user", JSON.stringify(data.user));
+
+			createWelcomeText(data.user.username);
 			alert("Signed In");
 		} else {
 			alert(`Error Signing in: ${data.error}`);

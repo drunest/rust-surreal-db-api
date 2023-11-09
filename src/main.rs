@@ -1,4 +1,5 @@
 use actix_cors::Cors;
+use actix_identity::IdentityMiddleware;
 use actix_web::{http::header, middleware::Logger, web::Data, App, HttpServer};
 use app_config::AppConfig;
 use log;
@@ -47,6 +48,7 @@ async fn main() -> std::io::Result<()> {
         let logger = Logger::default();
         App::new()
             .app_data(db_ctx.clone())
+            .wrap(IdentityMiddleware::default())
             .wrap(session::make_session(&application_config))
             .wrap(
                 Cors::default()
