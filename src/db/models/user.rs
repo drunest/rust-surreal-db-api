@@ -235,6 +235,6 @@ pub fn unwrap_auth(
 ) -> Result<AuthenticatedUser, AppError> {
     match auth_user {
         Some(user) => Ok(user.into_inner()),
-        None => Err(AppError::UnAuthorized),
+        None => Err(AppError::Unauthorized),
     }
 }

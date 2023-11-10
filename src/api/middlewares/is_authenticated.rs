@@ -80,9 +80,9 @@ fn check_user_id(req: &ServiceRequest) -> Result<(), AppError> {
     match identity {
         Ok(uid) => match uid.id() {
             Ok(_) => Ok(()),
-            Err(_) => Err(AppError::UnAuthorized),
+            Err(_) => Err(AppError::Unauthorized),
         },
-        Err(_) => Err(AppError::UnAuthorized),
+        Err(_) => Err(AppError::Unauthorized),
     }
 }
 
@@ -91,9 +91,9 @@ fn get_session_user(session: Session) -> Result<AuthenticatedUser, AppError> {
     match session_user {
         Ok(auth_user) => match auth_user {
             Some(user) => Ok(user),
-            None => Err(AppError::UnAuthorized),
+            None => Err(AppError::Unauthorized),
         },
-        Err(_) => Err(AppError::UnAuthorized),
+        Err(_) => Err(AppError::Unauthorized),
     }
 }
 

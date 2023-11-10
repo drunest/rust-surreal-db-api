@@ -41,7 +41,7 @@ pub enum AppError {
 
     #[allow(dead_code)]
     #[error("Unauthorized")]
-    UnAuthorized,
+    Unauthorized,
 
     #[allow(dead_code)]
     #[error("Forbidden: {0}")]
@@ -72,7 +72,7 @@ impl ResponseError for AppError {
             AppError::IOError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
-            AppError::UnAuthorized => StatusCode::UNAUTHORIZED,
+            AppError::Unauthorized => StatusCode::UNAUTHORIZED,
             AppError::IdentityError(_) => StatusCode::UNAUTHORIZED,
             AppError::Forbidden(_) => StatusCode::FORBIDDEN,
             AppError::SessionInsertError(_) => StatusCode::INTERNAL_SERVER_ERROR,
