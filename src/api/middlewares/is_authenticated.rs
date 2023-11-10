@@ -4,14 +4,15 @@ use std::{
 };
 
 use actix_identity::IdentityExt;
+use actix_session::{Session, SessionExt};
 use actix_web::{
     body::EitherBody,
     dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
-    Error, HttpResponse,
+    Error, HttpMessage,
 };
 use futures_util::future::LocalBoxFuture;
 
-use crate::app_error::{self};
+use crate::{app_error::AppError, db::models::user::AuthenticatedUser};
 
 // There are two steps in middleware processing.
 // 1. Middleware initialization, middleware factory gets called with
@@ -61,33 +62,52 @@ where
         let svc = Rc::clone(&self.service);
 
         Box::pin(async move {
-            let identity = req.get_identity();
+            check_user_id(&req)?;
 
-            match identity {
-                Ok(identity) => match identity.id() {
-                    Ok(_uid) => {
-                        let res = svc.call(req);
-                        res.await.map(ServiceResponse::map_into_left_body)
-                    }
-                    Err(_) => unauthorized_response(&req),
-                },
-                Err(_) => unauthorized_response(&req),
-            }
+            let req_session = req.get_session();
+            let auth_user = get_session_user(req_session)?;
+
+            req.extensions_mut().insert(auth_user); // add the user to the request
+
+            let res = svc.call(req);
+            res.await.map(ServiceResponse::map_into_left_body)
         })
     }
 }
 
-fn unauthorized_response<B>(req: &ServiceRequest) -> Result<ServiceResponse<EitherBody<B>>, Error>
-where
-    B: 'static,
-{
-    let request = req.request().clone();
-    let response = HttpResponse::Unauthorized()
-        .json(app_error::ErrorResponse::new(
-            401,
-            "You are not authenticated".into(),
-        ))
-        .map_into_right_body::<B>();
-
-    Ok(ServiceResponse::new(request, response))
+fn check_user_id(req: &ServiceRequest) -> Result<(), AppError> {
+    let identity = req.get_identity();
+    match identity {
+        Ok(uid) => match uid.id() {
+            Ok(_) => Ok(()),
+            Err(_) => Err(AppError::UnAuthorized),
+        },
+        Err(_) => Err(AppError::UnAuthorized),
+    }
 }
+
+fn get_session_user(session: Session) -> Result<AuthenticatedUser, AppError> {
+    let session_user = session.get::<AuthenticatedUser>("auth_user");
+    match session_user {
+        Ok(auth_user) => match auth_user {
+            Some(user) => Ok(user),
+            None => Err(AppError::UnAuthorized),
+        },
+        Err(_) => Err(AppError::UnAuthorized),
+    }
+}
+
+// fn _unauthorized_response<B>(req: &ServiceRequest) -> Result<ServiceResponse<EitherBody<B>>, Error>
+// where
+//     B: 'static,
+// {
+//     let request = req.request().clone();
+//     let response = HttpResponse::Unauthorized()
+//         .json(app_error::ErrorResponse::new(
+//             401,
+//             "You are not authenticated".into(),
+//         ))
+//         .map_into_right_body::<B>();
+
+//     Ok(ServiceResponse::new(request, response))
+// }

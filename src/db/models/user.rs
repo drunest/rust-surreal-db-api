@@ -1,4 +1,4 @@
-use actix_web::web::Data;
+use actix_web::web::{Data, ReqData};
 use serde::{Deserialize, Serialize};
 use surrealdb::{
     engine::remote::ws::Client,
@@ -226,5 +226,15 @@ impl From<&User> for AuthenticatedUser {
             username: value.username.clone(),
             is_admin: value.is_admin,
         }
+    }
+}
+
+/// Not required but for safety if for some reason the auth_user is None it will prevent panic if unwrapping an Option
+pub fn unwrap_auth(
+    auth_user: Option<ReqData<AuthenticatedUser>>,
+) -> Result<AuthenticatedUser, AppError> {
+    match auth_user {
+        Some(user) => Ok(user.into_inner()),
+        None => Err(AppError::UnAuthorized),
     }
 }
