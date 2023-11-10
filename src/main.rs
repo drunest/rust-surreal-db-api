@@ -15,20 +15,22 @@ mod macros;
 
 use db::db::{ConnectionOptions, DB};
 
+use once_cell::sync::Lazy;
 use surrealdb::opt::auth::Root;
+
+static APP_CONFIG: Lazy<AppConfig> = Lazy::new(|| AppConfig::init());
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let application_config = AppConfig::init();
-
     std::env::set_var("RUST_LOG", "info");
     std::env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
 
     log::info!("Radhey Shyam");
-    let namespace = &application_config.database_namespace;
-    let database = &application_config.database_name;
-    let username = &application_config.database_username;
-    let password = &application_config.database_password;
+    let namespace = &APP_CONFIG.database_namespace;
+    let database = &APP_CONFIG.database_name;
+    let username = &APP_CONFIG.database_username;
+    let password = &APP_CONFIG.database_password;
 
     let conn_opts = ConnectionOptions {
         namespace,
@@ -51,7 +53,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(db_ctx.clone())
             .wrap(IdentityMiddleware::default())
-            .wrap(session::make_session(&application_config))
+            .wrap(session::make_session())
             .wrap(
                 Cors::default()
                     .allowed_origin("http://localhost:5500")

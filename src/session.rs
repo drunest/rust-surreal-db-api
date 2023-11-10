@@ -1,12 +1,12 @@
 use actix_session::{config::PersistentSession, storage::CookieSessionStore, SessionMiddleware};
 use actix_web::cookie::{time::Duration as CookieDuration, Key};
 
-use crate::app_config;
+use crate::APP_CONFIG;
 
-pub fn make_session(app_config: &app_config::AppConfig) -> SessionMiddleware<CookieSessionStore> {
+pub fn make_session() -> SessionMiddleware<CookieSessionStore> {
     let session = SessionMiddleware::builder(
         CookieSessionStore::default(),
-        Key::from(app_config.session_secret.as_bytes()),
+        Key::from(APP_CONFIG.session_secret.as_bytes()),
     )
     .session_lifecycle(PersistentSession::default().session_ttl(CookieDuration::days(15)))
     .cookie_name("auth".to_owned())
