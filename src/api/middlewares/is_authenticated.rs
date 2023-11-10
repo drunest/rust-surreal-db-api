@@ -1,4 +1,7 @@
-use std::future::{ready, Ready};
+use std::{
+    future::{ready, Ready},
+    rc::Rc,
+};
 
 use actix_identity::IdentityExt;
 use actix_web::{
@@ -19,7 +22,7 @@ pub struct IsAuthenticated;
 // Middleware factory is `Transform` trait from actix-service crate
 // `S` - type of the next service
 // `B` - type of response's body
-impl<S, B> Transform<S, ServiceRequest> for IsAuthenticated
+impl<S: 'static, B> Transform<S, ServiceRequest> for IsAuthenticated
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
@@ -32,17 +35,19 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(IsAuthenticatedMiddleware { service }))
+        ready(Ok(IsAuthenticatedMiddleware {
+            service: Rc::new(service),
+        }))
     }
 }
 
 pub struct IsAuthenticatedMiddleware<S> {
-    service: S,
+    service: Rc<S>,
 }
 
 impl<S, B> Service<ServiceRequest> for IsAuthenticatedMiddleware<S>
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
@@ -52,29 +57,31 @@ where
 
     dev::forward_ready!(service);
 
-    fn call(&self, s_req: ServiceRequest) -> Self::Future {
-        let identity = s_req.get_identity();
+    fn call(&self, req: ServiceRequest) -> Self::Future {
+        let svc = Rc::clone(&self.service);
 
-        match identity {
-            Ok(identity) => match identity.id() {
-                Ok(_uid) => {
-                    let res = self.service.call(s_req);
-                    Box::pin(async move { res.await.map(ServiceResponse::map_into_left_body) })
-                }
-                Err(_) => unauthorized_response(&s_req),
-            },
-            Err(_) => unauthorized_response(&s_req),
-        }
+        Box::pin(async move {
+            let identity = req.get_identity();
+
+            match identity {
+                Ok(identity) => match identity.id() {
+                    Ok(_uid) => {
+                        let res = svc.call(req);
+                        res.await.map(ServiceResponse::map_into_left_body)
+                    }
+                    Err(_) => unauthorized_response(&req),
+                },
+                Err(_) => unauthorized_response(&req),
+            }
+        })
     }
 }
 
-fn unauthorized_response<B>(
-    s_req: &ServiceRequest,
-) -> LocalBoxFuture<'static, Result<ServiceResponse<EitherBody<B>>, Error>>
+fn unauthorized_response<B>(req: &ServiceRequest) -> Result<ServiceResponse<EitherBody<B>>, Error>
 where
     B: 'static,
 {
-    let request = s_req.request().clone();
+    let request = req.request().clone();
     let response = HttpResponse::Unauthorized()
         .json(app_error::ErrorResponse::new(
             401,
@@ -82,5 +89,5 @@ where
         ))
         .map_into_right_body::<B>();
 
-    Box::pin(async { Ok(ServiceResponse::new(request, response)) })
+    Ok(ServiceResponse::new(request, response))
 }
