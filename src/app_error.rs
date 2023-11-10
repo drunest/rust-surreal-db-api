@@ -9,7 +9,7 @@ use actix_web::{
 use serde::Serialize;
 
 #[derive(Serialize, Debug)]
-struct ErrorResponse {
+pub struct ErrorResponse {
     status_code: u16,
     error: String,
 }

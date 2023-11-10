@@ -1,5 +1,8 @@
 use crate::{
-    api::routes::{self, signin, signup},
+    api::{
+        middlewares::is_authenticated::IsAuthenticated,
+        routes::{self, signin, signup},
+    },
     app_error::AppError,
 };
 use actix_web::{
@@ -57,6 +60,7 @@ pub fn configure(config: &mut web::ServiceConfig) {
 
     // Define admin only routes
     let admin = web::scope("/admin")
+        .wrap(IsAuthenticated)
         .service(web::resource("/users").route(web::get().to(routes::users::get_all_users)));
 
     // Create API scope containing authentication and version 1 routes
