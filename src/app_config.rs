@@ -42,7 +42,8 @@ fn custom_json_error_handler(err: JsonPayloadError, req: &HttpRequest) -> actix_
 //?         - /login
 //?         - /register
 //?
-//?     - /v1
+//?     - /v1 -> **TODO!**
+//?     - /admin *admin_only*
 //?         - /users
 /// Configures the app routing and errors
 pub fn configure(config: &mut web::ServiceConfig) {
