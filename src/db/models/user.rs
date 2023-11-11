@@ -77,6 +77,7 @@ impl From<User> for Value {
     }
 }
 impl User {
+    /// Queries and returns all the users in the database
     pub async fn get_all(db: &Data<Surreal<Client>>) -> Result<Vec<User>, AppError> {
         let q = "SELECT * from type::table($tb);";
 
@@ -120,10 +121,12 @@ impl User {
         Ok(user)
     }
 
+    /// verifies the password of the user with the provided password in the params
     pub async fn verify_password(&self, password: &str) -> Result<bool, AppError> {
         password::verify(password, &self.password)
     }
 
+    /// Finds a user with a property in the user struct. Best when used with username or email_id
     pub async fn find_one(
         db: &Data<Surreal<Client>>,
         search_term: UserFindableCol,
@@ -152,6 +155,9 @@ impl User {
         Ok(Some(user))
     }
 
+    /// Api Does not allow users with same `username` or `email_id`
+    /// It it is the same then return which one already exists
+    /// If both of username and email_id does not exist in the db then returns `None`
     pub async fn exists(&self, db: &Data<Surreal<Client>>) -> Result<Option<UserExists>, AppError> {
         let find_q = "SELECT username, email_id FROM type::table($table) where username = $username or email_id = $email";
 

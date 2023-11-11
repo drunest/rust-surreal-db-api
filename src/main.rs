@@ -1,3 +1,22 @@
+// # Developer Documentation
+//
+// ## Project Overview
+// This Rust project serves as a learning ground for practical Rust programming. It encompasses features related to user management, authentication, and authorization middlewares.
+//
+// ## Dependencies
+// - **SurrealDB:** This project relies on SurrealDB as its database. Please ensure the SurrealDB server is installed and running for the application to function properly.
+//
+// ## Getting Started
+// To run the application locally:
+// 1. Install SurrealDB server and ensure it's running.
+// 2. Duplicate `env.example` and name the copied file as `.env`. Fill in the necessary environment variables.
+// 3. Execute `cargo run`. If you have Cargo Watch installed, you can use `cargo watch -x "run"` for automatic reloads during development.
+//
+// ## Note
+// This project is a practical exploration of Rust's capabilities and serves as a space for experimentation and learning. Feedback and contributions are welcome.
+//
+// ----------------------------------------------------------------------------------------------------------------------
+
 use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_web::{http::header, middleware::Logger, web::Data, App, HttpServer};
