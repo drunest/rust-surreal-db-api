@@ -1,6 +1,6 @@
 use crate::{
     api::{
-        middlewares::is_authenticated::IsAuthenticated,
+        middlewares::auth_middleware::Auth,
         routes::{self, signin, signup},
     },
     app_error::AppError,
@@ -60,7 +60,7 @@ pub fn configure(config: &mut web::ServiceConfig) {
 
     // Define admin only routes
     let admin = web::scope("/admin")
-        .wrap(IsAuthenticated)
+        .wrap(Auth::default().set_admin_only(true))
         .service(web::resource("/users").route(web::get().to(routes::users::get_all_users)));
 
     // Create API scope containing authentication and version 1 routes
@@ -79,6 +79,7 @@ pub struct AppConfig {
     pub database_namespace: String,
     pub database_username: String,
     pub database_password: String,
+    pub auth_cookie_key: String,
 }
 
 impl AppConfig {
@@ -97,6 +98,7 @@ impl AppConfig {
             database_namespace,
             database_password,
             database_username,
+            auth_cookie_key: "auth_user".into(),
         }
     }
 }

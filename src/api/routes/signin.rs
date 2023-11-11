@@ -76,11 +76,11 @@ pub async fn login(
         true => {
             let slim_user = SlimUser::from(&user);
             let user_store = AuthenticatedUser::from(&user);
-            Identity::login(&req.extensions(), slim_user.id.clone()).map_err(|err| {
-                dbg!(err);
-                AppError::InternalError("Something Went Wrong".into())
-            })?;
-            session.insert("auth_user", user_store)?;
+            // Login with identity middleware
+            Identity::login(&req.extensions(), slim_user.id.clone())?;
+
+            // Add the Simplified user to the session
+            session.insert(&crate::APP_CONFIG.auth_cookie_key, user_store)?;
 
             Ok(HttpResponse::Ok().json(json!(
             {"status": "success",

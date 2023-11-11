@@ -1,4 +1,4 @@
-use actix_identity::error::GetIdentityError;
+use actix_identity::error::{GetIdentityError, LoginError};
 use actix_session::SessionInsertError;
 use actix_web::{
     error::ResponseError,
@@ -45,10 +45,10 @@ pub enum AppError {
 
     #[allow(dead_code)]
     #[error("Forbidden: {0}")]
-    Forbidden(String),
+    Forbidden(&'static str),
 
     #[allow(dead_code)]
-    #[error("UNAUTHORIZED: {0}")]
+    #[error("Unauthorized: {0}")]
     IdentityError(GetIdentityError),
 
     #[allow(dead_code)]
@@ -101,5 +101,11 @@ impl From<GetIdentityError> for AppError {
 impl From<SessionInsertError> for AppError {
     fn from(value: SessionInsertError) -> Self {
         AppError::SessionInsertError(value)
+    }
+}
+
+impl From<LoginError> for AppError {
+    fn from(_: LoginError) -> Self {
+        AppError::Unauthorized
     }
 }
