@@ -1,6 +1,6 @@
 use crate::{
     api::{
-        middlewares::auth_middleware::Auth,
+        middlewares::require_auth::RequireAuthentication,
         routes::{self, signin, signup},
     },
     app_error::AppError,
@@ -60,7 +60,7 @@ pub fn configure(config: &mut web::ServiceConfig) {
 
     // Define admin only routes
     let admin = web::scope("/admin")
-        .wrap(Auth::default().set_admin_only(true))
+        .wrap(RequireAuthentication::default().set_admin_only(true))
         .service(web::resource("/users").route(web::get().to(routes::users::get_all_users)));
 
     // Create API scope containing authentication and version 1 routes
@@ -91,14 +91,14 @@ impl AppConfig {
         let database_name = get_env("SURREAL_DATABASE");
         let database_username = get_env("SURREAL_USERNAME");
         let database_password = get_env("SURREAL_PASSWORD");
-
+        let auth_cookie_key = get_env("AUTH_COOKIE_NAME");
         AppConfig {
             session_secret,
             database_name,
             database_namespace,
             database_password,
             database_username,
-            auth_cookie_key: "auth_user".into(),
+            auth_cookie_key,
         }
     }
 }

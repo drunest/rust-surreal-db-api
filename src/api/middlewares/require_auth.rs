@@ -17,16 +17,29 @@ use crate::{app_error::AppError, db::models::user::AuthenticatedUser};
 // 1. Middleware initialization, middleware factory gets called with
 //    next service in chain as parameter.
 // 2. Middleware's call method gets called with normal request.
+
+/// A middleware to handle Authentication and Authorization
 #[derive(Clone)]
-pub struct Auth {
+pub struct RequireAuthentication {
     pub admin_only: bool,
 }
-impl Default for Auth {
+impl Default for RequireAuthentication {
+    /// # Default settings
+    /// - Allows Authenticated users to this route else 401
+    /// - Allows all types of users
+    /// - If you want role based usage use set_functions
+    ///
+    /// ## Available Set Functions
+    /// ```rust
+    /// RequireAuthentication.set_admin_only()
+    /// ```
     fn default() -> Self {
         Self { admin_only: false }
     }
 }
-impl Auth {
+
+impl RequireAuthentication {
+    /// Allow only admin users to access the route
     pub fn set_admin_only(mut self, enabled: bool) -> Self {
         self.admin_only = enabled;
         self
@@ -36,7 +49,7 @@ impl Auth {
 // Middleware factory is `Transform` trait from actix-service crate
 // `S` - type of the next service
 // `B` - type of response's body
-impl<S: 'static, B> Transform<S, ServiceRequest> for Auth
+impl<S: 'static, B> Transform<S, ServiceRequest> for RequireAuthentication
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
@@ -45,23 +58,23 @@ where
     type Response = ServiceResponse<B>;
     type Error = Error;
     type InitError = ();
-    type Transform = AuthMiddleware<S>;
+    type Transform = RequireAuthenticationMiddleware<S>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(AuthMiddleware {
+        ready(Ok(RequireAuthenticationMiddleware {
             service: Rc::new(service),
             admin_only: self.admin_only,
         }))
     }
 }
 
-pub struct AuthMiddleware<S> {
+pub struct RequireAuthenticationMiddleware<S> {
     service: Rc<S>,
     admin_only: bool,
 }
 
-impl<S, B> Service<ServiceRequest> for AuthMiddleware<S>
+impl<S, B> Service<ServiceRequest> for RequireAuthenticationMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
@@ -87,7 +100,7 @@ where
 
             // check if the route is admin_only and if the user is an admin
             if admin_only && !auth_user.is_admin {
-                return Err(AppError::Forbidden("You are not a admin").into());
+                return Err(AppError::Forbidden("You are not an admin").into());
             }
 
             // Add the session user into the request extensions so the next routes can access it
