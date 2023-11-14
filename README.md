@@ -1,4 +1,4 @@
-# Rust Learning Project
+# Surreal DB and Actix Web
 
 Hello fellow coder! This project was created to delve deeper into Rust programming practically during my free time.
 
@@ -6,7 +6,7 @@ Hello fellow coder! This project was created to delve deeper into Rust programmi
 
 - User creation
 - User authentication
-- Middlewares for authorization
+- Middleware for authorization
 
 ### Database
 
