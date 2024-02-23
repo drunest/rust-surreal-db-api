@@ -1,7 +1,5 @@
 # Surreal DB and Actix Web
 
-Hello fellow coder! This project was created to delve deeper into Rust programming practically during my free time.
-
 ### Features
 
 - User creation
